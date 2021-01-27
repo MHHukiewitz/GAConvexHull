@@ -6,12 +6,12 @@ from math import *
 
 class Point:
     _name: str
-    x: float
-    y: float
+    _x: float
+    _y: float
 
     def __init__(self, x, y, name=None):
-        self.x = x
-        self.y = y
+        self._x = x
+        self._y = y
         self._name = name
 
     def __repr__(self):
@@ -20,16 +20,32 @@ class Point:
     def __str__(self):
         return f"{'Point' if self._name is None else self._name}({self.x}, {self.y})"
 
+    @property
+    def name(self) -> str:
+        return self._name
+
+    @property
+    def x(self) -> float:
+        return self._x
+
+    @property
+    def y(self) -> float:
+        return self._y
 
 class Segment:
     name: str
-    p: Point
-    q: Point
+    _p: Point
+    _q: Point
+    _m: float
 
     def __init__(self, p, q, name=None):
         self.name = name
-        self.p = p
-        self.q = q
+        self._p = p
+        self._q = q
+        if self.p.x == self.q.x:
+            self._m = inf
+        else:
+            self._m = (self.p.y - self.q.y) / (self.p.x - self.q.x)
 
     def length(self):
         return sqrt((self.p.x - self.q.x) ** 2 + (self.p.y - self.q.y) ** 2)
@@ -41,12 +57,16 @@ class Segment:
         return plt.Line2D((self.p.x, self.q.x), (self.p.y, self.q.y), label=self.m)
 
     @property
+    def p(self) -> Point:
+        return self._p
+
+    @property
+    def q(self) -> Point:
+        return self._q
+
+    @property
     def m(self) -> float:
-        if self.p.y == self.q.y:
-            return 0
-        elif self.p.x == self.q.x:
-            return inf
-        return (self.p.y - self.q.y) / (self.p.x - self.q.x)
+        return self._m
 
 
 def sort_left_right(P: Sequence[Point]) -> Sequence[Point]:
@@ -59,6 +79,7 @@ def graham_scan(P: Sequence[Point]) -> Sequence[Point]:
     sorted_P = sort_left_right(P)
     equator = Segment(sorted_P[0], sorted_P[-1])  # line seperating upper and lower convex hull
     upper_CH = [sorted_P[0]]  # upper convex hull
+
 
     # TODO: Convex Hull...
     return upper_CH
