@@ -1,7 +1,8 @@
-from typing import Sequence
+from typing import Sequence, Deque
 import random
 import matplotlib.pyplot as plt
 from math import *
+from collections import deque
 
 
 class Point:
@@ -82,20 +83,48 @@ def sort_left_right(P: Sequence[Point]) -> Sequence[Point]:
 
 
 def graham_scan(P: Sequence[Point]) -> Sequence[Point]:
-    upper_CH: Sequence[Point]
+    upper_CH: Deque[Point]
+    upper_CH_segs: Deque[Segment]
 
     sorted_P = sort_left_right(P)
     equator = Segment(sorted_P[0], sorted_P[-1])  # line seperating upper and lower convex hull
-    upper_CH = [sorted_P[0]]  # upper convex hull
+
     upper_P = list(filter(lambda p: p.y >= equator.height_at(p.x), sorted_P))
+
+    upper_CH = deque()            # stack
+    upper_CH.extend(upper_P[:2])  # upper convex hull
+    upper_CH_segs = deque()
+    upper_CH_segs.append(Segment(upper_CH[0], upper_CH[1]))
+
+    for q in upper_P:
+        seg = Segment(upper_CH[-1], q)
+        if upper_CH_segs[-1].m - seg.m >= 0:  # has this segment a convex angle to the last?
+            upper_CH.append(q)               # then just add
+            upper_CH_segs.append(seg)
+        else:                             # is concave angle?
+            popped = False
+            for i in reversed(range(0, len(upper_CH) - 1)):  # go over last added points
+                temp_seg = Segment(upper_CH[i], q)  # and make temporary segments
+                if temp_seg.m < seg.m:    # is new segment less steep?
+                    upper_CH.pop()        # then remove last segment
+                    upper_CH_segs.pop()   # and point
+                    seg = temp_seg        # continue with new segment
+                    popped = True
+                else:
+                    break
+            if popped:                    # removed some previous points?
+                upper_CH.append(q)        # then also add
+                upper_CH_segs.append(seg)
+
     lower_P = list(filter(lambda p: p.y < equator.height_at(p.x), sorted_P))
-    print(upper_P)
-    print(lower_P)
+
     # draw something
     plt.axes()
     plt.scatter([p.x for p in upper_P], [p.y for p in upper_P], c='red')
     plt.scatter([p.x for p in lower_P], [p.y for p in lower_P], c='blue')
     plt.gca().add_line(equator.line())
+    for seg in upper_CH_segs:
+        plt.gca().add_line(seg.line())
     plt.show()
 
     return upper_CH
@@ -103,7 +132,7 @@ def graham_scan(P: Sequence[Point]) -> Sequence[Point]:
 
 POINT_CNT = 20
 
-points = [Point(random.randint(0, 100), random.randint(0, 100)) for i in range(POINT_CNT)]
+points = [Point(random.randint(0, 10), random.randint(0, 10)) for i in range(POINT_CNT)]
 print(points)
 
 graham_scan(points)
