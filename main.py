@@ -11,6 +11,27 @@ def sort_left_right(P: Sequence[Point]) -> Sequence[Point]:
     return sorted(P, key=lambda p: p.x)
 
 
+def mirror(P: Sequence[Point], mirror_s: Segment) -> Sequence[Point]:
+    """https://stackoverflow.com/questions/8954326/how-to-calculate-the-mirror-point-along-a-line"""
+    mirrored_P: Deque[Point]
+
+    # a line is: a * x + b * y + c = 0
+    a = mirror_s.q.y - mirror_s.p.y
+    b = -(mirror_s.q.x - mirror_s.p.x)
+    c = -a * mirror_s.p.x - b * mirror_s.p.y
+    # normalize
+    m = sqrt(a ** 2 + b ** 2)
+    a /= m
+    b /= m
+    c /= m
+
+    mirrored_P = deque()
+    for p in P:
+        D = a * p.x + b * p.y + c
+        mirrored_P.append(Point(p.x - 2 * a * D, p.y - 2 * b * D))
+    return mirrored_P
+
+
 def graham_scan(P: Sequence[Point]) -> Sequence[Point]:
     upper_CH: Deque[Point]
     upper_CH_segs: Deque[Segment]
@@ -64,9 +85,9 @@ def graham_scan(P: Sequence[Point]) -> Sequence[Point]:
     return upper_CH
 
 
-POINT_CNT = 20
+POINT_CNT = 200
 
-points = [Point(random.randint(0, 10), random.randint(0, 10)) for i in range(POINT_CNT)]
+points = [Point(random.randint(0, 100), random.randint(0, 100)) for i in range(POINT_CNT)]
 print(points)
 
 graham_scan(points)
