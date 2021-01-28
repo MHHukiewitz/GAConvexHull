@@ -45,9 +45,17 @@ class Segment:
         self._p = p
         self._q = q
         if self.p.x == self.q.x:
-            self._m = inf
+            if self.p.y < self.q.y:
+                self._m = inf
+            elif self.p.y > self.q.y:
+                self._m = -inf
+            else:
+                self._m = 0
         else:
-            self._m = (self.p.y - self.q.y) / (self.p.x - self.q.x)
+            if self.p.y == self.q.y:
+                self._m = 0
+            else:
+                self._m = (self.p.y - self.q.y) / (self.p.x - self.q.x)
 
     def __repr__(self):
         return f"{'' if self.name is None else self.name}({self.p.__repr__()} {self.q.__repr__()})"
@@ -55,8 +63,8 @@ class Segment:
     def length(self):
         return sqrt((self.p.x - self.q.x) ** 2 + (self.p.y - self.q.y) ** 2)
 
-    def line(self) -> plt.Line2D:
-        return plt.Line2D((self.p.x, self.q.x), (self.p.y, self.q.y), label=self.m)
+    def line(self, _color=None) -> plt.Line2D:
+        return plt.Line2D((self.p.x, self.q.x), (self.p.y, self.q.y), label=self.m, color=_color)
 
     def height_at(self, x: float) -> float:
         return self.p.y - (self.p.x - x) * self.m
@@ -86,6 +94,8 @@ def graham_scan(P: Sequence[Point]) -> Sequence[Point]:
     upper_CH: Deque[Point]
     upper_CH_segs: Deque[Segment]
 
+    plt.axes()  # prepare drawing
+
     sorted_P = sort_left_right(P)
     equator = Segment(sorted_P[0], sorted_P[-1])  # line seperating upper and lower convex hull
 
@@ -96,35 +106,38 @@ def graham_scan(P: Sequence[Point]) -> Sequence[Point]:
     upper_CH_segs = deque()
     upper_CH_segs.append(Segment(upper_CH[0], upper_CH[1]))
 
-    for q in upper_P:
-        seg = Segment(upper_CH[-1], q)
-        if upper_CH_segs[-1].m - seg.m >= 0:  # has this segment a convex angle to the last?
+    for q in upper_P[2:]:
+        s = Segment(upper_CH[-1], q)
+        delta_m = upper_CH_segs[-1].m - s.m  # vertical up, now again up
+        if delta_m is nan or delta_m > 0:  # has this segment a convex angle to the last?
             upper_CH.append(q)               # then just add
-            upper_CH_segs.append(seg)
+            upper_CH_segs.append(s)
         else:                             # is concave angle?
             popped = False
             for i in reversed(range(0, len(upper_CH) - 1)):  # go over last added points
-                temp_seg = Segment(upper_CH[i], q)  # and make temporary segments
-                if temp_seg.m < seg.m:    # is new segment less steep?
+                p = upper_CH[i]
+                temp_seg = Segment(p, q)  # and make temporary segments
+                # is new segment less steep or equal? Or are both points on the same spot?
+                if temp_seg.m <= s.m or p.x == q.x and p.y == q.y:
                     upper_CH.pop()        # then remove last segment
+                    plt.gca().add_line(upper_CH_segs[-1].line('grey'))
                     upper_CH_segs.pop()   # and point
-                    seg = temp_seg        # continue with new segment
+                    s = temp_seg        # continue with new segment
                     popped = True
                 else:
                     break
             if popped:                    # removed some previous points?
                 upper_CH.append(q)        # then also add
-                upper_CH_segs.append(seg)
+                upper_CH_segs.append(s)
 
     lower_P = list(filter(lambda p: p.y < equator.height_at(p.x), sorted_P))
 
     # draw something
-    plt.axes()
     plt.scatter([p.x for p in upper_P], [p.y for p in upper_P], c='red')
     plt.scatter([p.x for p in lower_P], [p.y for p in lower_P], c='blue')
-    plt.gca().add_line(equator.line())
-    for seg in upper_CH_segs:
-        plt.gca().add_line(seg.line())
+    for s in upper_CH_segs:
+        plt.gca().add_line(s.line())
+        print(f"{s}: m = {round(s.m, 2)}, height_at({s.q.x}) = {s.height_at(s.q.x)}")
     plt.show()
 
     return upper_CH
