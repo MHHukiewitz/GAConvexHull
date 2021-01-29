@@ -1,4 +1,6 @@
+from collections import deque
 from math import inf, sqrt
+from typing import List
 
 from matplotlib import pyplot as plt
 
@@ -72,3 +74,17 @@ class Segment:
     @property
     def m(self) -> float:
         return self._m
+
+
+class Polygon:
+    name: str
+    points: List[Point]
+    segments: List[Segment]
+
+    def __init__(self, points: List[Point]):
+        segs = deque()
+        segs.append(Segment(points[0], points[1]))
+        for p in points[2:]:
+            segs.append(Segment(segs[-1].q, p))
+        segs.append(Segment(points[-1], points[0]))
+        self.segments = list(segs)

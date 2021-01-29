@@ -4,22 +4,22 @@ import matplotlib.pyplot as plt
 from math import *
 from collections import deque
 
-from entities import Point, Segment
+from entities import Point, Segment, Polygon
 from util import sort_left_right
 
-DEBUG = True
+DEBUG = False
 
 
 def graham_scan(P: Sequence[Point]) -> List[Point]:
-    upper_CH: Deque[Point]
-    upper_CH_segs: Deque[Segment]
-
-    plt.axes()  # prepare drawing
+    if DEBUG:
+        plt.axes()  # prepare drawing
 
     sorted_P = sort_left_right(P)
+
     middle_line = Segment(sorted_P[0], sorted_P[-1])  # line seperating upper and lower convex hull
     middle_line.p.name = 'mid_p'
     middle_line.q.name = 'mid_q'
+
     upper_P = list(filter(lambda p: p.y >= middle_line.height_at(p.x), sorted_P))
 
     upper_CH, upper_CH_segs = upper_graham_scan(upper_P)
@@ -127,3 +127,11 @@ points = [Point(random.randint(0, 100), random.randint(0, 100)) for i in range(P
 
 CH = graham_scan(points)
 
+poly = Polygon(CH)
+
+# draw result
+plt.axes()
+plt.scatter([p.x for p in points], [p.y for p in points])
+for s in poly.segments:
+    plt.gca().add_line(s.line())
+plt.show()
