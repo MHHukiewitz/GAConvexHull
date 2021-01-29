@@ -7,7 +7,7 @@ from collections import deque
 from entities import Point, Segment, Polygon
 from util import sort_left_right
 
-DEBUG = False
+DEBUG = True
 
 
 def graham_scan(P: Sequence[Point]) -> List[Point]:
@@ -51,7 +51,7 @@ def graham_scan(P: Sequence[Point]) -> List[Point]:
             print(f"{s}: m = {round(s.m, 2)}, height_at({s.q.x}) = {s.height_at(s.q.x)}")
         plt.show()
 
-    return upper_CH + list(reversed(lower_CH))
+    return upper_CH + list(reversed(lower_CH))[1:-1]
 
 
 def upper_graham_scan(upper_P: Sequence[Point]) -> (List[Point], List[Segment]):
@@ -120,18 +120,22 @@ def lower_graham_scan(lower_P: Sequence[Point]) -> (List[Point], List[Segment]):
     return list(lower_CH), list(lower_CH_segs)
 
 
-POINT_CNT = 1000
+# Might fail to include upper left and lower left points for large point counts (>10000)
+POINT_CNT = 20000
 
 
-points = [Point(random.randint(0, 100), random.randint(0, 100)) for i in range(POINT_CNT)]
+points = [Point(random.randint(0, 100), random.random()) for i in range(POINT_CNT)]
 
 CH = graham_scan(points)
+print(CH)
+print(len(CH))
 
-poly = Polygon(CH)
 
 # draw result
-plt.axes()
-plt.scatter([p.x for p in points], [p.y for p in points])
-for s in poly.segments:
-    plt.gca().add_line(s.line())
-plt.show()
+if not DEBUG:
+    poly = Polygon(CH)
+    plt.axes()
+    plt.scatter([p.x for p in points], [p.y for p in points])
+    for s in poly.segments:
+        plt.gca().add_line(s.line())
+    plt.show()
