@@ -3,27 +3,25 @@ from math import inf, sqrt
 from matplotlib import pyplot as plt
 
 
+# TODO: x, y not setable
 class Point:
-    _name: str
+    name: str
     x: float
     y: float
 
     def __init__(self, x, y, name=None):
         self.x = x
         self.y = y
-        self._name = name
+        self.name = name
 
     def __repr__(self):
-        return f"{'' if self._name is None else self._name}({self.x}, {self.y})"
+        return f"{'' if self.name is None else self.name}({self.x}, {self.y})"
 
     def __str__(self):
-        return f"{'Point' if self._name is None else self._name}({self.x}, {self.y})"
-
-    @property
-    def name(self) -> str:
-        return self._name
+        return f"{'Point' if self.name is None else self.name}({self.x}, {self.y})"
 
 
+# TODO: points setable
 class Segment:
     _name: str
     _p: Point
